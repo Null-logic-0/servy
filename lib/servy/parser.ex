@@ -10,7 +10,7 @@ defmodule Servy.Parser do
 
     headers = parse_headers(header_lines, %{})
 
-    params = parse_params(headers["Content_Type"], params_string)
+    params = parse_params(headers["Content-Type"], params_string)
 
     %Conv{
       method: method,
