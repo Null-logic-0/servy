@@ -2,15 +2,13 @@ defmodule Servy.Handler do
   @moduledoc """
     Handles HTTP requests.
   """
-  # @pages_path Path.expand("../../pages", __DIR__)
-  @pages_path Path.expand("pages", File.cwd!())
 
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
   import Servy.Parser, only: [parse: 1]
-  import Servy.FileHandler, only: [handle_file: 2]
 
   alias Servy.Conv
   alias Servy.BearController
+  alias Servy.RenderStaticPages
 
   @doc """
     Transforms the request into a response.
@@ -30,24 +28,15 @@ defmodule Servy.Handler do
   end
 
   def route(%Conv{method: "GET", path: "/about"} = conv) do
-    @pages_path
-    |> Path.join("about.html")
-    |> File.read()
-    |> handle_file(conv)
+    RenderStaticPages.render(conv, "about.html")
   end
 
   def route(%Conv{method: "GET", path: "/contact"} = conv) do
-    @pages_path
-    |> Path.join("contact.html")
-    |> File.read()
-    |> handle_file(conv)
+    RenderStaticPages.render(conv, "contact.html")
   end
 
   def route(%Conv{method: "GET", path: "/bears/new"} = conv) do
-    @pages_path
-    |> Path.join("form.html")
-    |> File.read()
-    |> handle_file(conv)
+    RenderStaticPages.render(conv, "form.html")
   end
 
   def route(%Conv{method: "GET", path: "/bears"} = conv) do
