@@ -15,4 +15,6 @@ defmodule Servy.Plugins do
   def rewrite_path(%Conv{} = conv), do: conv
 
   def log(%Conv{} = conv), do: IO.inspect(conv)
+  
+  
 end
