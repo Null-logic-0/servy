@@ -7,6 +7,16 @@ defmodule Servy.Conv do
             resp_body: "",
             status: nil
 
+  def put_resp_content_type(conv, type) do
+    headers = Map.put(conv.resp_headers, "Content-Type", type)
+    %{conv | resp_headers: headers}
+  end
+
+  def put_content_length(conv) do
+    headers = Map.put(conv.resp_headers, "Content-Length", String.length(conv.resp_body))
+    %{conv | resp_headers: headers}
+  end
+
   def full_status(conv) do
     "#{conv.status} #{status_reason(conv.status)}"
   end
