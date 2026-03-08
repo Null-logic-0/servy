@@ -7,8 +7,7 @@ defmodule Servy.Handler do
   import Servy.Parser, only: [parse: 1]
 
   alias Servy.Conv
-  alias Servy.BearController
-  alias Servy.RenderStaticPages
+  alias Servy.Router
 
   @doc """
     Transforms the request into a response.
@@ -18,69 +17,10 @@ defmodule Servy.Handler do
     |> parse()
     |> rewrite_path()
     |> log()
-    |> route()
+    |> Router.route()
     |> track()
-    |> put_content_length()
+    |> Conv.put_content_length()
     |> format_response()
-  end
-
-  def route(%Conv{method: "GET", path: "/wildthings"} = conv) do
-    %{conv | status: 200, resp_body: "Bears, Lions, Tigers"}
-  end
-
-  def route(%Conv{method: "GET", path: "/about"} = conv) do
-    RenderStaticPages.render(conv, "about.html")
-  end
-
-  def route(%Conv{method: "GET", path: "/contact"} = conv) do
-    RenderStaticPages.render(conv, "contact.html")
-  end
-
-  def route(%Conv{method: "GET", path: "/bears/new"} = conv) do
-    RenderStaticPages.render(conv, "form.html")
-  end
-
-  def route(%Conv{method: "GET", path: "/api/bears"} = conv) do
-    Servy.Api.BearController.index(conv)
-  end
-
-  def route(%Conv{method: "GET", path: "/bears"} = conv) do
-    BearController.index(conv)
-  end
-
-  def route(%Conv{method: "GET", path: "/bears/" <> id} = conv) do
-    params = Map.put(conv.params, "id", id)
-    BearController.show(conv, params)
-  end
-
-  def route(%Conv{method: "POST", path: "/api/bears"} = conv) do
-    Servy.Api.BearController.create(conv, conv.params)
-  end
-
-  def route(%Conv{method: "POST", path: "/bears"} = conv) do
-    BearController.create(conv, conv.params)
-  end
-
-  def route(%Conv{method: "DELETE", path: "/bears/" <> _id} = conv) do
-    BearController.delete(conv, conv.params)
-  end
-
-  def route(%Conv{method: _method, path: path} = conv) do
-    %{conv | status: 404, resp_body: "No #{path} here!"}
-  end
-
-  def put_content_length(conv) do
-    headers = Map.put(conv.resp_headers, "Content-Length", String.length(conv.resp_body))
-    %{conv | resp_headers: headers}
-  end
-
-  defp format_response_headers(conv) do
-    for {key, value} <- conv.resp_headers do
-      "#{key}: #{value}\r"
-    end
-    |> Enum.sort()
-    |> Enum.reverse()
-    |> Enum.join("\n")
   end
 
   def format_response(%Conv{} = conv) do
@@ -90,5 +30,14 @@ defmodule Servy.Handler do
     \r
     #{conv.resp_body}
     """
+  end
+
+  defp format_response_headers(conv) do
+    for {key, value} <- conv.resp_headers do
+      "#{key}: #{value}\r"
+    end
+    |> Enum.sort()
+    |> Enum.reverse()
+    |> Enum.join("\n")
   end
 end
