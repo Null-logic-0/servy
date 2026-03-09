@@ -3,7 +3,7 @@ defmodule Servy.Router do
   alias Servy.BearController
   alias Servy.RenderStaticPages
   alias Servy.Api.BearController, as: ApiBearController
-  alias Servy.VideoCam
+  # alias Servy.VideoCam
   alias Servy.PledgeController
 
   def route(%Conv{method: "GET", path: "/wildthings"} = conv) do

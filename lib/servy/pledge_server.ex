@@ -4,14 +4,16 @@ defmodule Servy.PledgeServer do
   use GenServer
 
   defmodule State do
-    defstruct chache_size: 3, pledges: []
+    defstruct cache_size: 3, pledges: []
   end
 
-  # Client interface
+  # -----------------
+  # Client API
+  # -----------------
 
-  def start do
+  def start_link(_arg) do
     IO.puts("Starting server...")
-    GenServer.start(__MODULE__, %State{}, name: @name)
+    GenServer.start_link(__MODULE__, %State{}, name: @name)
   end
 
   def create_pledge(name, amount) do
@@ -31,13 +33,15 @@ defmodule Servy.PledgeServer do
   end
 
   def set_cache_size(size) do
-    GenServer.cast(@name, {:set_cahce_size, size})
+    GenServer.cast(@name, {:set_cache_size, size})
   end
 
+  # -----------------
   # Server Callbacks
+  # -----------------
 
   def init(state) do
-    pladges = fetch_recent_pledges_from_service()
+    pledges = fetch_recent_pledges_from_service()
     new_state = %{state | pledges: pledges}
     {:ok, new_state}
   end
@@ -46,48 +50,59 @@ defmodule Servy.PledgeServer do
     {:noreply, %{state | pledges: []}}
   end
 
-  def handle_cast(:set_cache_size, state) do
+  def handle_cast({:set_cache_size, size}, state) do
     new_state = %{state | cache_size: size}
     {:noreply, new_state}
   end
 
-  def handle_call(:total_pledged, state) do
-    total = Enum.map(state.pledges, &elem(&1, 1)) |> Enum.sum()
+  def handle_call(:total_pledged, _from, state) do
+    total =
+      state.pledges
+      |> Enum.map(&elem(&1, 1))
+      |> Enum.sum()
+
     {:reply, total, state}
   end
 
-  def handle_call(:recent_pledged, _from, state) do
+  def handle_call(:recent_pledges, _from, state) do
     {:reply, state.pledges, state}
   end
 
-  def handle_call({:create_pledge, _from, name, amount}, state) do
+  def handle_call({:create_pledge, name, amount}, _from, state) do
     {:ok, id} = send_pledge_to_service(name, amount)
-    most_recent_pledges = Enum.take(state.pledges, state.cache_szie - 1)
-    cached_pledges = [{name, amount} | most_recent_pledges]
+
+    most_recent =
+      state.pledges
+      |> Enum.take(state.cache_size - 1)
+
+    cached_pledges = [{name, amount} | most_recent]
+
     new_state = %{state | pledges: cached_pledges}
+
     {:reply, id, new_state}
   end
 
   def handle_info(message, state) do
-    IO.puts("Can't touch this! #{inspect(message)}")
+    IO.puts("Unexpected message: #{inspect(message)}")
     {:noreply, state}
   end
 
-  defp send_pledge_to_service(_name, _from, _amount) do
+  # -----------------
+  # Private functions
+  # -----------------
+
+  defp send_pledge_to_service(_name, _amount) do
     {:ok, "pledge-#{:rand.uniform(1000)}"}
   end
 
   defp fetch_recent_pledges_from_service do
-    # CODE GOES HERE TO FETCH RECENT PLEDGES FROM EXTERNAL SERVICE
-
-    # Example return value:
     [{"wilma", 15}, {"fred", 25}]
   end
 end
 
 alias Servy.PledgeServer
 
-{:ok, pid} = PledgeServer.start()
+{:ok, _pid} = PledgeServer.start_link(nil)
 
 PledgeServer.set_cache_size(4)
 
