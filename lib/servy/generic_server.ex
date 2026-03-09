@@ -26,7 +26,7 @@ defmodule Servy.GenericServer do
         listen_loop(new_state, callback_module)
 
       {:cast, message} ->
-        callback_module.handle_cast(message, state)
+        new_state = callback_module.handle_cast(message, state)
         listen_loop(new_state, callback_module)
 
       unexpected ->
