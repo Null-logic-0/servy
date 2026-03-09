@@ -1,6 +1,4 @@
 defmodule Servy.GenericServer do
-  alias Servy.PledgeServer
-
   def start(callback_module, inital_state, name) do
     pid = spawn(__MODULE__, :listen_loop, [inital_state, callback_module])
     Process.register(pid, name)
